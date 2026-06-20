@@ -26,6 +26,9 @@ Rules:
 - Be specific and actionable, referencing actual repo details
 - Keep each array item concise (one sentence max)
 - architectureDiagram MUST be valid Mermaid flowchart syntax starting with "graph TD". Use \\n for newlines (it is embedded in a JSON string). Represent 6-10 major components (e.g. frontend, backend, database, auth, external APIs) and how they connect, based on the actual file tree and tech stack provided. Do not wrap it in markdown fences.
+- Node labels MUST be plain short text only (2-4 words, e.g. "AES Module" not "AES Module (aes.c, aes.h)"). NEVER use parentheses, brackets, quotes, pipes, or any special characters inside node labels — these break the Mermaid parser. If you want to mention a filename, put it in a separate node or omit it entirely.
+- Use simple node shape syntax only: A[Label] for rectangles or A(Label) for rounded — pick ONE style and use it consistently for all nodes. Do not mix shapes or nest any punctuation inside the label text itself.
+- Example of a SAFE diagram: "graph TD\\n  A[Frontend] --> B[Backend API]\\n  B --> C[Auth Service]\\n  B --> D[(Database)]\\n  B --> E[Gemini API]"
 - Generate exactly 5 interviewQuestions, specific to THIS repo's actual architecture and code (not generic questions), covering a mix of design decisions, tradeoffs, and implementation details visible in the data provided.`;
 
 const FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];

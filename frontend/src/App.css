@@ -512,6 +512,12 @@ body {
   color: var(--text-muted);
 }
 
+.architecture-section,
+.interview-section {
+  grid-column: 1 / -1; /* if sections-grid uses CSS grid, this isn't even needed since these are now siblings, not grid children */
+  margin: 2rem 0;
+}
+
 @media (max-width: 900px) {
   .hero-top {
     flex-direction: column;

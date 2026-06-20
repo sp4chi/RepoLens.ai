@@ -31,6 +31,8 @@ const analysisSchema = new mongoose.Schema(
       recommendations: [String],
       healthScore: Number,
       complexity: String,
+      architectureDiagram: { type: String, default: null },
+      interviewQuestions: [{ question: String, whatGoodAnswerLooksLike: String }],
     },
     status: {
       type: String,

@@ -14,13 +14,19 @@ Respond ONLY with valid JSON (no markdown, no code fences) in this exact shape:
   "useCases": ["use case 1", "use case 2"],
   "recommendations": ["recommendation 1", "recommendation 2"],
   "healthScore": 75,
-  "complexity": "low|medium|high"
+  "complexity": "low|medium|high",
+  "architectureDiagram": "graph TD\\n  A[Frontend] --> B[Backend API]\\n  B --> C[(Database)]",
+  "interviewQuestions": [
+    { "question": "string", "whatGoodAnswerLooksLike": "1 sentence hint for the interviewer" }
+  ]
 }
 
 Rules:
 - healthScore is 0-100 based on maintenance, docs, activity, and community signals
 - Be specific and actionable, referencing actual repo details
-- Keep each array item concise (one sentence max)`;
+- Keep each array item concise (one sentence max)
+- architectureDiagram MUST be valid Mermaid flowchart syntax starting with "graph TD". Use \\n for newlines (it is embedded in a JSON string). Represent 6-10 major components (e.g. frontend, backend, database, auth, external APIs) and how they connect, based on the actual file tree and tech stack provided. Do not wrap it in markdown fences.
+- Generate exactly 5 interviewQuestions, specific to THIS repo's actual architecture and code (not generic questions), covering a mix of design decisions, tradeoffs, and implementation details visible in the data provided.`;
 
 const FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
 
@@ -73,6 +79,28 @@ function parseGeminiJson(text) {
   return JSON.parse(cleaned);
 }
 
+// Sanity-check + sanitize the diagram field so a malformed response never
+// breaks rendering downstream. Falls back to null if unusable, which the
+// frontend should treat as "no diagram available" rather than erroring.
+function sanitizeDiagram(raw) {
+  if (typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  if (!trimmed.toLowerCase().startsWith('graph ')) return null;
+  return trimmed;
+}
+
+function sanitizeInterviewQuestions(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((q) => q && typeof q.question === 'string')
+    .slice(0, 5)
+    .map((q) => ({
+      question: q.question.trim(),
+      whatGoodAnswerLooksLike:
+        typeof q.whatGoodAnswerLooksLike === 'string' ? q.whatGoodAnswerLooksLike.trim() : '',
+    }));
+}
+
 function isQuotaError(error) {
   const message = error?.message || '';
   return message.includes('429') || message.toLowerCase().includes('quota');
@@ -94,7 +122,13 @@ function sleep(ms) {
 async function generateWithModel(genAI, modelName, prompt) {
   const model = genAI.getGenerativeModel({ model: modelName });
   const result = await model.generateContent(prompt);
-  return parseGeminiJson(result.response.text());
+  const parsed = parseGeminiJson(result.response.text());
+
+  return {
+    ...parsed,
+    architectureDiagram: sanitizeDiagram(parsed.architectureDiagram),
+    interviewQuestions: sanitizeInterviewQuestions(parsed.interviewQuestions),
+  };
 }
 
 export async function analyzeRepo(owner, repo, repoData) {

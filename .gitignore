@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+atlas-credentials.env
+github-recovery-codes-*.txt
+backend/.env

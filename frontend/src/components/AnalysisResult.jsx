@@ -1,0 +1,105 @@
+function ScoreRing({ score }) {
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const color =
+    score >= 75 ? 'var(--accent-green)' : score >= 50 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+
+  return (
+    <div className="score-ring">
+      <svg viewBox="0 0 120 120">
+        <circle className="score-ring-bg" cx="60" cy="60" r={radius} />
+        <circle
+          className="score-ring-fill"
+          cx="60"
+          cy="60"
+          r={radius}
+          stroke={color}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div className="score-value">
+        <span>{score}</span>
+        <small>health</small>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }) {
+  return (
+    <div className="stat">
+      <span className="stat-label">{label}</span>
+      <span className="stat-value">{value}</span>
+    </div>
+  );
+}
+
+function Section({ title, items, variant = 'default' }) {
+  if (!items?.length) return null;
+
+  return (
+    <section className={`analysis-section ${variant}`}>
+      <h3>{title}</h3>
+      <ul>
+        {items.map((item, i) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export default function AnalysisResult({ data }) {
+  const { owner, repo, repoData, analysis } = data;
+
+  return (
+    <article className="analysis-result">
+      <header className="result-header">
+        <div>
+          <p className="repo-path">
+            <a href={data.repoUrl} target="_blank" rel="noreferrer">
+              {owner}/{repo}
+            </a>
+          </p>
+          <h2>{repoData.name}</h2>
+          {repoData.description && <p className="repo-description">{repoData.description}</p>}
+        </div>
+        <ScoreRing score={analysis.healthScore} />
+      </header>
+
+      <div className="stats-grid">
+        <Stat label="Stars" value={repoData.stars?.toLocaleString()} />
+        <Stat label="Forks" value={repoData.forks?.toLocaleString()} />
+        <Stat label="Open issues" value={repoData.openIssues?.toLocaleString()} />
+        <Stat label="Language" value={repoData.language || '—'} />
+        <Stat label="License" value={repoData.license || '—'} />
+        <Stat label="Complexity" value={analysis.complexity} />
+      </div>
+
+      {repoData.topics?.length > 0 && (
+        <div className="topics">
+          {repoData.topics.map((topic) => (
+            <span key={topic} className="topic">
+              {topic}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <section className="summary-section">
+        <h3>Summary</h3>
+        <p>{analysis.summary}</p>
+      </section>
+
+      <div className="sections-grid">
+        <Section title="Strengths" items={analysis.strengths} variant="positive" />
+        <Section title="Weaknesses" items={analysis.weaknesses} variant="negative" />
+        <Section title="Tech stack" items={analysis.techStack} />
+        <Section title="Use cases" items={analysis.useCases} />
+        <Section title="Recommendations" items={analysis.recommendations} variant="accent" />
+      </div>
+    </article>
+  );
+}

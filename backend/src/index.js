@@ -9,6 +9,11 @@ import analysisRoutes from './routes/analysis.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Required behind reverse proxies (Render, Railway, etc.) so Express
+// correctly detects HTTPS — without this, secure cookies can silently
+// fail to be set in production even though the connection is actually HTTPS.
+app.set('trust proxy', 1);
+
 app.use(
   cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
